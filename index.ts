@@ -606,6 +606,59 @@ export function registerDI(instantiator: DependencyInjectionSystem) {
     }
 }
 
+const registeredSkipConditions = {};
+
+/**
+ * Register skip condition namespaces.
+ */
+export function registerSkipConditions(skipConditions: {}): void {
+
+  for (const key in skipConditions) {
+      
+    const value = skipConditions[key];
+    if (typeof value === 'function') {
+
+      registerSkipCondition(registeredSkipConditions, key, value);
+    } else { // object
+
+      registerSkipConditionsNamespaces(registeredSkipConditions, key, value);
+    }
+  }
+
+  // TODO: register this with the global @skip decorator
+  // TODO: register this with the global @test.skip decorator
+  // TODO: register this with the global @suite.skip decorator
+  // TODO: make this work with the global @params.skip decorator
+}
+
+function registerSkipConditionsNamespace(parent: {}, name: string | null, obj: {}): void {
+
+  let actualParent = parent;
+  if (name !== null) {
+
+    actualParent = parent[name];
+    if (actualParent === null) {
+
+      actualParent = parent[name] = {};
+    }
+  }
+
+  for (const key in obj) {
+      
+    const value = obj[key];
+    if (typeof value === 'function') {
+
+      registerSkipCondition(actualParent, key, value);
+    } else { // object
+
+      registerSkipConditionsNamespace(actualParent, key, value);
+    }
+  }
+}
+
+function registerSkipCondition(parent: {}, name: string, fn: () => boolean): void {
+}
+
 /**
  * Dummy Mocha Custom Test UI.
  */
